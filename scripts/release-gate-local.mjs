@@ -39,7 +39,7 @@
 //                  green run's artifacts during the #5904 forensics).
 //
 // Env knobs (all optional; defaults fit the dev host):
-//   GATE_DSH_BIN          default "dsh"            (dsh >= 0.2.0-rc.2 surface)
+//   GATE_DSH_BIN          default "dsh"            (dsh >= 0.2.2-rc.2 surface)
 //   GATE_PNPM_BIN         default "pnpm"
 //   GATE_SGLANG_URL       default http://127.0.0.1:8199
 //   GATE_SGLANG_MODEL     default "qwen3.8-27b,qwen3.6-27b"

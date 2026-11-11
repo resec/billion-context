@@ -82,7 +82,7 @@ export const DSH_BUILD_CHECK: ClientBuildCheck = {
     label: "dsh",
     pkgId: "@deepseek-ai/dsh",
     knobEnv: "BILI_DSH_MAX_TESTED_VERSION",
-    defaultMaxTested: "0.2.0-rc.2", // ci-e2e-dsh-native.yml anchor
+    defaultMaxTested: "0.2.2-rc.2", // ci-e2e-dsh-native.yml anchor
 };
 
 /** Compose the one-shot bilingual note, or null when nothing needs saying:

@@ -47,7 +47,7 @@
 //      arm the Auto preset exists, that pin lives in
 //      tests/dsh-persona-continuity.test.ts (review e2e, both wires).
 //
-// Gated by ACP_TEST_E2E_DSH_NATIVE=1 (needs a real `dsh` >= 0.2.0-rc.2 with
+// Gated by ACP_TEST_E2E_DSH_NATIVE=1 (needs a real `dsh` >= 0.2.2-rc.2 with
 // --session-id + `npm run build`; the profile loads dist/agent/dsh-native.js).
 // Scenario A fails on pre-fix master with the `|sub:` fork — that is the
 // regression it pins; scenario B pins the isolation the fix must preserve.
@@ -508,7 +508,7 @@ function allSessions(rig: Rig): Session[] {
     return [...JSON.parse(rig.persistedSessions().state) as Session[], ...JSON.parse(rig.persistedSessions().data) as Session[]];
 }
 
-const gated = { skip: (!GATE || !dshAvailable()) ? "set ACP_TEST_E2E_DSH_NATIVE=1 with a real dsh >= 0.2.0-rc.2" : false };
+const gated = { skip: (!GATE || !dshAvailable()) ? "set ACP_TEST_E2E_DSH_NATIVE=1 with a real dsh >= 0.2.2-rc.2" : false };
 
 test("real dsh #2241 A: a mid-session model switch keeps the raw conversation key (no |sub: fork; title side lane harmless)", gated, async (t) => {
     assert.ok(fs.existsSync(path.join(REPO_ROOT, "dist", "agent", "dsh-native.js")), "npm run build first — the profile loads dist/agent/dsh-native.js");
@@ -618,7 +618,7 @@ test("real dsh #2791 C: a mid-session PROTOCOL switch (openai -> anthropic) keep
 });
 
 // Scenario B is written and kept ready, but real-client auto-review cannot
-// arm in headless TODAY (verified against dsh 0.2.0-rc.2 sources):
+// arm in headless TODAY (verified against dsh 0.2.2-rc.2 sources):
 //   - the review gate is `permissionPresets.current(agent.session) !== "auto"
 //     -> pass through` (dsh-experimental-auto-review apply());
 //   - a headless session carries NO preset: agents.create({meta:{cwd}}) only
@@ -638,10 +638,10 @@ test("real dsh #2791 C: a mid-session PROTOCOL switch (openai -> anthropic) keep
 // Flip this gate when that changes.
 const gatedB = {
     skip: (!GATE || !dshAvailable())
-        ? "set ACP_TEST_E2E_DSH_NATIVE=1 with a real dsh >= 0.2.0-rc.2"
+        ? "set ACP_TEST_E2E_DSH_NATIVE=1 with a real dsh >= 0.2.2-rc.2"
         : process.env.ACP_TEST_E2E_DSH_AUTO_REVIEW === "1"
             ? false
-            : "blocked: dsh 0.2.0-rc.2 exposes no headless surface to arm the Auto permission preset (web-UI /permission auto only) — set ACP_TEST_E2E_DSH_AUTO_REVIEW=1 to attempt anyway",
+            : "blocked: dsh 0.2.2-rc.2 exposes no headless surface to arm the Auto permission preset (web-UI /permission auto only) — set ACP_TEST_E2E_DSH_AUTO_REVIEW=1 to attempt anyway",
 };
 
 test("real dsh #2241/#4438 B: auto-review rides the stateless passthrough while the main lane keeps the raw key", gatedB, async (t) => {

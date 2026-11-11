@@ -17,7 +17,7 @@ const DSH_PKG = "node_modules/@deepseek-ai/dsh/package.json";
 test("DSH_BUILD_CHECK matches the CI e2e anchor identity", () => {
     assert.equal(DSH_BUILD_CHECK.pkgId, "@deepseek-ai/dsh");
     assert.equal(DSH_BUILD_CHECK.knobEnv, "BILI_DSH_MAX_TESTED_VERSION");
-    assert.equal(DSH_BUILD_CHECK.defaultMaxTested, "0.2.0-rc.2"); // ci-e2e-dsh-native.yml anchor
+    assert.equal(DSH_BUILD_CHECK.defaultMaxTested, "0.2.2-rc.2"); // ci-e2e-dsh-native.yml anchor
 });
 
 test("walkUpNodeModuleVersion finds the nearest package above startDir", () => {
@@ -69,7 +69,7 @@ test("walkUpNodeModuleVersion returns undefined when nothing sits above", () => 
 
 test("maxTestedVersion tri-state: default / override / off", () => {
     const KEY = DSH_BUILD_CHECK.knobEnv;
-    assert.equal(maxTestedVersion(DSH_BUILD_CHECK, {}), "0.2.0-rc.2", "unset → CI anchor default");
+    assert.equal(maxTestedVersion(DSH_BUILD_CHECK, {}), "0.2.2-rc.2", "unset → CI anchor default");
     assert.equal(maxTestedVersion(DSH_BUILD_CHECK, { [KEY]: "0.3.0" }), "0.3.0", "override moves the cap");
     assert.equal(maxTestedVersion(DSH_BUILD_CHECK, { [KEY]: "" }), undefined, "empty string turns the check OFF");
     assert.equal(maxTestedVersion(DSH_BUILD_CHECK, { [KEY]: "   " }), undefined, "whitespace-only also means OFF");
@@ -80,20 +80,21 @@ test("newerClientBuildMessage decision table: only STRICTLY newer warns", () => 
     // nothing resolved — absence of evidence ≠ broken build
     assert.equal(newerClientBuildMessage(DSH_BUILD_CHECK, undefined, {}), null);
     // at the cap: verified territory, silent
-    assert.equal(newerClientBuildMessage(DSH_BUILD_CHECK, "0.2.0-rc.2", {}), null);
+    assert.equal(newerClientBuildMessage(DSH_BUILD_CHECK, "0.2.2-rc.2", {}), null);
     // older builds: silent by design (their break modes have dedicated probes)
     assert.equal(newerClientBuildMessage(DSH_BUILD_CHECK, "0.1.7-rc.2", {}), null);
     assert.equal(newerClientBuildMessage(DSH_BUILD_CHECK, "0.2.0-rc.1", {}), null);
+    assert.equal(newerClientBuildMessage(DSH_BUILD_CHECK, "0.2.1-rc.5", {}), null);
     // unparseable found or cap: comparison fails open to silence
     assert.equal(newerClientBuildMessage(DSH_BUILD_CHECK, "garbage", {}), null);
     assert.equal(newerClientBuildMessage(DSH_BUILD_CHECK, "9.9.9", { [DSH_BUILD_CHECK.knobEnv]: "nope" }), null);
 
     // strictly newer in every direction that dsh actually ships
-    for (const v of ["0.2.0-rc.3", "0.2.1-alpha.5", "0.2.1-rc.2", "0.3.0"]) {
+    for (const v of ["0.2.2-rc.3", "0.2.3-alpha.1", "0.2.3-rc.1", "0.3.0"]) {
         const msg = newerClientBuildMessage(DSH_BUILD_CHECK, v, {});
         assert.ok(msg !== null, `v${v} is newer than the cap and must warn`);
         assert.ok(msg!.includes(`v${v}`), "names the detected build");
-        assert.ok(msg!.includes("0.2.0-rc.2"), "names the capped build");
+        assert.ok(msg!.includes("0.2.2-rc.2"), "names the capped build");
         assert.ok(msg!.includes("[dsh]"), "labels the lane");
         assert.ok(msg!.includes("@deepseek-ai/dsh"), "names the npm id");
     }
@@ -108,10 +109,10 @@ test("newerClientBuildMessage: knob-off silences; raised cap re-baselines (bilin
     const raised = newerClientBuildMessage(DSH_BUILD_CHECK, "8.8.8", env);
     assert.ok(raised !== null && raised.includes("7.7.7"), "names the raised cap");
     // EN + CN halves both present
-    const msg = newerClientBuildMessage(DSH_BUILD_CHECK, "0.2.1-rc.2", {})!;
+    const msg = newerClientBuildMessage(DSH_BUILD_CHECK, "0.2.3-rc.1", {})!;
     assert.ok(msg.includes("NEWER than the newest build billion-context has tested against"), "EN guidance");
     assert.ok(msg.includes("压缩能力在该构建上未经我们验证、可能不稳定"), "CN guidance");
-    assert.ok(msg.includes("先将客户端回滚到 v0.2.0-rc.2"), "CN roll-back target");
+    assert.ok(msg.includes("先将客户端回滚到 v0.2.2-rc.2"), "CN roll-back target");
 });
 
 test("walkUp: multiple candidate paths are tried at each level", () => {
@@ -144,17 +145,17 @@ test("emitNewerClientBuildNote: channels and tri-state outcomes", () => {
     try {
         // silent: nothing resolved / below cap / check off
         assert.equal(emitNewerClientBuildNote(DSH_BUILD_CHECK, undefined, {}), false);
-        assert.equal(emitNewerClientBuildNote(DSH_BUILD_CHECK, "0.2.0-rc.2", {}), false);
+        assert.equal(emitNewerClientBuildNote(DSH_BUILD_CHECK, "0.2.2-rc.2", {}), false);
         assert.equal(emitNewerClientBuildNote(DSH_BUILD_CHECK, "9.9.9", { [DSH_BUILD_CHECK.knobEnv]: "" }), false);
         assert.equal(banners.length, 0, "no banner when silent");
         // fires: console banner + durable bili.log line
-        assert.equal(emitNewerClientBuildNote(DSH_BUILD_CHECK, "0.2.1-rc.2", {}), true);
+        assert.equal(emitNewerClientBuildNote(DSH_BUILD_CHECK, "0.2.3-rc.1", {}), true);
         assert.equal(banners.length, 1);
         assert.ok(banners[0]!.includes("[dsh]"), "banner carries the lane label");
-        assert.ok(banners[0]!.includes("v0.2.1-rc.2") && banners[0]!.includes("v0.2.0-rc.2"), "banner carries both versions");
+        assert.ok(banners[0]!.includes("v0.2.3-rc.1") && banners[0]!.includes("v0.2.2-rc.2"), "banner carries both versions");
         const log = fs.readFileSync(path.join(logDir, "billion-context", "bili.log"), "utf8");
         assert.ok(log.includes("[warn]") && log.includes("[native-client]"), "durable warn record present");
-        assert.ok(log.includes("v0.2.1-rc.2"), "durable record carries the found version");
+        assert.ok(log.includes("v0.2.3-rc.1"), "durable record carries the found version");
         // per-lane knob OFF suppresses even a far-newer build
         assert.equal(emitNewerClientBuildNote(DSH_BUILD_CHECK, "9.9.9", { [DSH_BUILD_CHECK.knobEnv]: "  " }), false);
     } finally {

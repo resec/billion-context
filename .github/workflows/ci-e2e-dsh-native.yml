@@ -82,10 +82,12 @@ jobs:
       # bundle API surface must not drift under this suite. Bump deliberately
       # after re-running the suite locally on the new version.
       - name: Install dsh CLI
-        # 0.2.0-rc.2: the persona lane needs `--session-id` (session adoption
-        # across runs — the #2241 model-switch shape). The base lane below was
-        # verified against this version too.
-        run: npm i -g @deepseek-ai/dsh@0.2.0-rc.2
+        # 0.2.2-rc.2: the persona lane still needs `--session-id` (session
+        # adoption across runs — the #2241 model-switch shape); 0.2.2 changed
+        # the auto-review request shape (#6104) and started shipping compaction
+        # rows inside the minimal preset. The base lane below was verified
+        # against this version too.
+        run: npm i -g @deepseek-ai/dsh@0.2.2-rc.2
 
       - name: Print dsh version
         run: dsh --version
